@@ -1,0 +1,2 @@
+"0","rule_uscovidwithTimenew <- read.csv(""~/Desktop/daidai final/Final/rule_uscovidwithTime copy.csv"")"
+"0","Allfactordata<- na.omit(rule_uscovidwithTimenew)"

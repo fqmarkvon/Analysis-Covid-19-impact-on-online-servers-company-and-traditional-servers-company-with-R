@@ -1,0 +1,8 @@
+"0","#level_rules <- apriori(data = rule_uscovid, parameter = list (supp=0.001,conf = 0.08),list(rhs=""dailylevelnum""))"
+"0","level_rules <- apriori(data = rule_uscovid, parameter = list (supp=0.001,conf = 0.08))"
+"2","Column(s) 1, 2, 3, 4, 5 not logical or factor. Applying default discretization (see '? discretizeDF')."
+"1","Apriori
+"
+"1","
+Parameter specification:
+"

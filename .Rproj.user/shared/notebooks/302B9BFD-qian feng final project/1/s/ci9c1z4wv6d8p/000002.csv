@@ -1,0 +1,2 @@
+"0","original_uscovid <- read.csv(""~/Desktop/daidai final/Qian Feng project/modify/modify_uscovid.csv"")"
+"0","uscovid<- na.omit(original_uscovid)"

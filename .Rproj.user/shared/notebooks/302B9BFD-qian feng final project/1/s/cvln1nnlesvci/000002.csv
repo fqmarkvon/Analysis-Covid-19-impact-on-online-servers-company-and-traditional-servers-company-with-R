@@ -1,0 +1,3 @@
+"0","#rule_uscovid<-subset(uscovid, select = c(""date"",""fatalityRate"", ""positiveRate"",""recoveryRate"",""dailylevel.bracket"")) "
+"0","rule_uscovid<-subset(uscovid, select = c(""date"",""fatalityRate"", ""positiveRate"",""recoveryRate"",""dailylevelnum"")) "
+"0",""

@@ -1,0 +1,8 @@
+"0","fatalityRate_graph<-ggplot(uscovid, aes(x=Date,y=fatalityRate))+ geom_line(colour=""red"")+scale_x_date(breaks = date_breaks(""1 month""), labels=date_format(""%b""))"
+"0",""
+"0","positiveRate_graph<-ggplot(uscovid, aes(x=Date,y=positiveRate))+ geom_line(colour=""blue"")+scale_x_date(breaks = date_breaks(""1 month""), labels=date_format(""%b""))"
+"0",""
+"0","recoveryRate_graph<-ggplot(uscovid, aes(x=Date,y=recoveryRate))+ geom_line(colour=""green"")+scale_x_date(breaks = date_breaks(""1 month""), labels=date_format(""%b""))"
+"0",""
+"0","grid.arrange(fatalityRate_graph, positiveRate_graph,recoveryRate_graph)"
+"0",""

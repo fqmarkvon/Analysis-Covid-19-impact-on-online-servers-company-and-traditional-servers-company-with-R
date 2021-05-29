@@ -1,0 +1,23 @@
+"0","ggplot() +"
+"0","      geom_line(data=uscovid, aes(x=date, y=fatalityRate), fill=""red"","
+"0","        colour=""red"", size=1 +"
+"0","      geom_line(data=uscovid, aes(x=date, y=positiveRate), fill=""blue"","
+"0","        colour=""blue"", size=1) +"
+"0","      geom_line(data=uscovid, aes(x=date, y=recoveryRate), fill=""green"","
+"0","        colour=""green"", size=1) +"
+"0","      geom_line(data=zoom, aes(x=Date, y=Open), fill=""black"","
+"0","        colour=""black"", size=1),"
+"0",""
+"0","  "
+"2","Error: Incomplete expression: ggplot() +
+      geom_line(data=uscovid, aes(x=date, y=fatalityRate), fill=""red"",
+        colour=""red"", size=1 +
+      geom_line(data=uscovid, aes(x=date, y=positiveRate), fill=""blue"",
+        colour=""blue"", size=1) +
+      geom_line(data=uscovid, aes(x=date, y=recoveryRate), fill=""green"",
+        colour=""green"", size=1) +
+      geom_line(data=zoom, aes(x=Date, y=Open), fill=""black"",
+        colour=""black"", size=1),
+
+  
+"

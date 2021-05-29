@@ -1,0 +1,2 @@
+"0","zoomtry_graph<-ggplot(zoom_try, aes(x=Date,y=Open))+ geom_line()"
+"0","zoomtry_graph"

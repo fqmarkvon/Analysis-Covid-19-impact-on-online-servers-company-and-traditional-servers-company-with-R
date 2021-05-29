@@ -1,0 +1,5 @@
+"0","fatalityRate_graph<-ggplot(uscovid, aes(x=date,y=fatalityRate),color=""red"")+ geom_line()"
+"0","positiveRate_graph<-ggplot(uscovid, aes(x=date,y=positiveRate),color=""blue"")+ geom_line()"
+"0","recoveryRate_graph<-ggplot(uscovid, aes(x=date,y=recoveryRate),color=""green"")+ geom_line()"
+"0",""
+"0","grid.arrange(fatalityRate_graph, positiveRate_graph,recoveryRate_graph)"

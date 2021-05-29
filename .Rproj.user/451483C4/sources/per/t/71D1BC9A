@@ -1,0 +1,26 @@
+{
+    "id": "71D1BC9A",
+    "path": "~/code/Lab-KMeans.Rmd",
+    "project_path": null,
+    "type": "r_markdown",
+    "hash": "1960114555",
+    "contents": "",
+    "dirty": false,
+    "created": 1618805715292.0,
+    "source_on_save": false,
+    "relative_order": 8,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "38,40",
+        "scrollLine": "28"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1616965277,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1616965277,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,1 @@
+"0","ggplot(uscovid, aes(x=date, y=dailylevelnum, color=dailylevel.bracket)) + geom_line()"

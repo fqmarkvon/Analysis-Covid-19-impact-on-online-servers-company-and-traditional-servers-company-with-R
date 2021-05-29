@@ -1,0 +1,286 @@
+---
+title: "Qian Feng Final"
+author: "Qian Feng"
+date: "4/18/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objective
+### 1.Analysis the relationship among fatality Rate, positive Rate, and recovery Rate of covid-19
+### 2.Find out which rate will affect covid-19 daily safety level the most
+### 3.Use external data, analyze the effects of covid-19 on the stock marketing among these AMC, Grubhub, Las Vegas Sands Corp, and Zoom.
+# Package
+```{r}
+library(ggplot2)
+library(dplyr)
+library(arules)
+library(arulesViz)
+library(e1071)
+library(gridExtra)
+library(lubridate)
+library(grid)
+library(tidyverse)
+library(cluster)
+library(factoextra)
+library(dendextend)
+library(scales)
+```
+# Part 1:Analysis the relationship among fatality Rate, positive Rate, and recovery Rate of covid-19
+## Data
+```{r}
+modify_uscovid <- read.csv("~/Desktop/bigdata/Qian Feng project/modify/modify_uscovid.csv")
+uscovid<- na.omit(modify_uscovid)
+uscovid$Date<-as.Date(uscovid$Date,"%m/%d/%y")
+```
+### The dataset I use is covid-19 relative information from April 1, 2020 to December 6, 2020
+## Step1:Pre-processing
+```{r}
+uscovid$fatalityRate<-(uscovid$death/uscovid$positive)*100
+uscovid$positiveRate<-(uscovid$positive/uscovid$totalTestResults)*100
+uscovid$recoveryRate<-(uscovid$recovered/uscovid$positive)*100
+uscovid$dailylevelnum<-(uscovid$positiveIncrease/uscovid$totalTestResultsIncrease)*100
+
+```
+### Fatality Rate represents:The daily case fatality rate of covid-19
+
+### Positive Rate represents:The daily case positive rate of covid-19
+
+### Recovery Rate represents:The daily case recovery rate of covid-19
+
+### dailylevel number reprents:The ratio of daily covid-19 positive cases to the total daily covid-19 cases
+
+## Relationship among fatalityRate, positiveRate, and recoveryRate
+
+## Step2:Correlation Analysis 
+```{r}
+cor(uscovid$fatalityRate,uscovid$positiveRate)
+cor(uscovid$fatalityRate,uscovid$recoveryRate)
+cor(uscovid$positiveRate,uscovid$recoveryRate)
+
+```
+### From the correlation analysis, we can see that the correlation between fatality Rate and positive Rate seems relative, but others correlation seems unreasonable. 
+## Step3:Plot all three rates into graph 
+```{r}
+fatalityRate_graph<-ggplot(uscovid, aes(x=Date,y=fatalityRate))+ geom_line(colour="red")+scale_x_date(breaks = date_breaks("1 month"), labels=date_format("%b"))
+
+positiveRate_graph<-ggplot(uscovid, aes(x=Date,y=positiveRate))+ geom_line(colour="blue")+scale_x_date(breaks = date_breaks("1 month"), labels=date_format("%b"))
+
+recoveryRate_graph<-ggplot(uscovid, aes(x=Date,y=recoveryRate))+ geom_line(colour="green")+scale_x_date(breaks = date_breaks("1 month"), labels=date_format("%b"))
+
+grid.arrange(fatalityRate_graph, positiveRate_graph,recoveryRate_graph)
+
+```
+
+### During the period from April 1, 2020, to December 6, 2020. The fatality rate of U.S covid-19 first increases in a short period of time and then continues to decrease. The positive rate of U.S covid-19 continues to decrease. The recovery rate of U.S covid-19 continues to increase. 
+
+### The positive rate and the fatality rate are proportional, but the trend of the fatality rate has a couple of days later than the positive rates trend.The recovery rate is inversely proportional to the positive rate
+
+# Part 2:Find out which rate will affect covid-19 daily safety level the most
+## Step1:Correlation Analysis 
+```{r}
+cor(uscovid$fatalityRate,uscovid$dailylevelnum)
+cor(uscovid$positiveRate,uscovid$dailylevelnum)
+cor(uscovid$recoveryRate,uscovid$dailylevelnum)
+
+```
+### From the correlation analysis, we can see that only the correlation between positive rate and  covid-19 daily safety level is relative, but others correlation seems unreasonable. 
+
+## Step2:Plot all four level into graph
+```{r}
+uscovid$dailyLevel.bracket<-discretize(uscovid$dailylevelnum, method = "frequency",breaks = 3,labels = c("good","fine","bad"))
+uscovid$fatalityLevel.bracket<-discretize(uscovid$fatalityRate, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+uscovid$positiveLevel.bracket<-discretize(uscovid$positiveRate, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+uscovid$recoveryLevel.bracket<-discretize(uscovid$recoveryRate, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+
+dailyLeveLnum_graph<-ggplot(uscovid, aes(x=Date, y=dailylevelnum, color=dailyLevel.bracket)) + geom_line()+scale_x_date(breaks = date_breaks("2 months"), labels=date_format("%b"))
+
+fatalityLevel_graph<-ggplot(uscovid, aes(x=Date, y=fatalityRate, color=fatalityLevel.bracket)) + geom_line()+scale_x_date(breaks = date_breaks("2 months"), labels=date_format("%b"))
+
+positiveLevel_graph<-ggplot(uscovid, aes(x=Date, y=positiveRate, color=positiveLevel.bracket)) + geom_line()+scale_x_date(breaks = date_breaks("2 months"), labels=date_format("%b"))
+
+recoveryLevel_graph<-ggplot(uscovid, aes(x=Date, y=recoveryRate, color=recoveryLevel.bracket)) + geom_line()+scale_x_date(breaks = date_breaks("2 months"), labels=date_format("%b"))
+
+grid.arrange(dailyLeveLnum_graph, fatalityLevel_graph,positiveLevel_graph,recoveryLevel_graph)
+
+```
+
+### I separate the dailylevel number into three levels "good", "fine", "bad". Indicate the daily level of covid-19 in the U.S. Then I apply the same method on Fatality Rate, Positive Rate, and Recovery Rate.
+
+### From this graph, I did not see anything directly, so let me use the other way to find the relationship among them
+
+## Step3:Association rule
+### pre-processing the data
+```{r}
+rule_uscovid<-subset(uscovid, select = c("dailyLevel.bracket","fatalityLevel.bracket", "positiveLevel.bracket","recoveryLevel.bracket")) 
+
+rule_uscovid_rules<- apriori(rule_uscovid, parameter = list(support = 0.01, confidence = 0.5))
+
+dailyLevel_good <- apriori(data=rule_uscovid, parameter=list (support=0.01,conf = 0.8), appearance = list (rhs="dailyLevel.bracket=good"))
+dailyLevel_bad <- apriori(data=rule_uscovid, parameter=list (support=0.01,conf = 0.8), appearance = list (rhs="dailyLevel.bracket=bad"))
+
+```
+
+### Check the Association rule
+```{r}
+inspect(head(sort(dailyLevel_good , by = "lift"), 3))
+inspect(head(sort(dailyLevel_bad , by = "lift"), 3))
+
+```
+
+
+### From the table above, we can see that when the daily covid-19 safety level is good. The recovery rate level is high, the fatality rate level is medium or low, and the positive rate level is low. 
+
+### It explains the daily safety level is directly proportional to the recovery rate level. But it is inversely proportional to the fatality rate level and the positive rate level
+
+## Step4:Determine the worst period of U.S covid-19
+```{r}
+wrost_condition<-uscovid %>% filter(uscovid$dailyLevel.bracket == "bad"&uscovid$fatalityLevel.bracket=="high"&uscovid$positiveLevel.bracket=="high"&uscovid$recoveryLevel.bracket=="low")
+
+show(wrost_condition$Date)
+
+wroststart.date = as.Date("2020-04-11")
+wrostend.date   = as.Date("2020-05-11")
+```
+
+### From the data shown above, we can see that the worst covid-19 period (from April 1, 2020 to December 6, 2020)is approximately between April and May. so we can set the worst period start date as April 11th and the worst period end date as May 11th.
+
+# Part 3:Analyze the effects of covid-19 on the stock marketing among these AMC, Grubhub, Las Vegas Sands Corp, and Zoom.
+
+## Step1:import external data
+```{r}
+modify_AMC <- read.csv("~/Desktop/bigdata/Qian Feng project/modify/modify_AMC.csv")
+modify_Grubhub <- read.csv("~/Desktop/bigdata/Qian Feng project/modify/modify_Grubhub.csv")
+modify_LasVegas <- read.csv("~/Desktop/bigdata/Qian Feng project/modify/modify_LasVegas.csv")
+modify_zoom <- read.csv("~/Desktop/bigdata/Qian Feng project/modify/modify_zoom.csv")
+AMC<- na.omit(modify_AMC)
+AMC$Date<-as.Date(AMC$Date,"%m/%d/%y")
+Grubhub<- na.omit(modify_Grubhub)
+Grubhub$Date<-as.Date(Grubhub$Date,"%m/%d/%y")
+LasVegas<- na.omit(modify_LasVegas)
+LasVegas$Date<-as.Date(LasVegas$Date,"%m/%d/%y")
+zoom<- na.omit(modify_zoom)
+zoom$Date<-as.Date(zoom$Date,"%m/%d/%y")
+```
+
+## Step2:Plot four company's stock marketing trend
+```{r}
+AMC_graph<-ggplot(AMC, aes(x=Date,y=Price))+ geom_line(colour="red")+ggtitle("AMC")+scale_x_date(breaks = date_breaks("1 months"), labels=date_format("%b"))
+
+Grubhub_graph<-ggplot(Grubhub, aes(x=Date,y=Price))+ geom_line(colour="blue")+ggtitle("Grubhub")+scale_x_date(breaks = date_breaks("1 months"), labels=date_format("%b"))
+
+LasVegas_graph<-ggplot(LasVegas, aes(x=Date,y=Price))+ geom_line(colour="green")+ggtitle("Las Vegas Sands")+scale_x_date(breaks = date_breaks("1 months"), labels=date_format("%b"))
+
+zoom_graph<-ggplot(zoom, aes(x=Date,y=Price))+ geom_line(colour="black")+ggtitle("Zoom")+scale_x_date(breaks = date_breaks("1 months"), labels=date_format("%b"))
+
+grid.arrange(AMC_graph, Grubhub_graph,LasVegas_graph,zoom_graph)
+```
+
+### In general, we can see that during the period from April 1, 2020, to December 6, 2020, the stock price of AMC first increases in a short period of time then decreases in a short period of time, then increases in a short period of time again. And finally continues to decrease.
+
+### During the period, the stock price of Las Vegas Sands first increases in a short period of time then decreases in a short period of time, then increases in a short period of time again, then decreases in a short period of time once again. And finally continues to increase
+
+### During the period,the stock price of Grubhub is continues to increase
+
+### During the period,the stock price of Zoom is continues to increase
+
+## Step3:Four company's stock marketing trend in worst covid-19 period
+```{r}
+AMC_filtered = data=AMC %>% filter(Date >= wroststart.date & Date <= wrostend.date)
+Grubhub_filtered = data=Grubhub %>% filter(Date >= wroststart.date & Date <= wrostend.date)
+LasVegas_filtered = data=LasVegas %>% filter(Date >= wroststart.date & Date <= wrostend.date)
+zoom_filtered = data=zoom %>% filter(Date >= wroststart.date & Date <= wrostend.date)
+
+AMC_wrost<-ggplot(AMC_filtered, aes(x=Date,y=Price))+ geom_line(colour="black")+ggtitle("AMC in wrost covid19 period")+scale_x_date(breaks = date_breaks("1 day"), labels=date_format("%b%d"))+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+Grubhub_wrost<-ggplot(Grubhub_filtered, aes(x=Date,y=Price))+ geom_line(colour="black")+ggtitle("Grubhub in wrost covid19 period")+scale_x_date(breaks = date_breaks("1 day"), labels=date_format("%b%d"))+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+LasVegas_wrost<-ggplot(LasVegas_filtered, aes(x=Date,y=Price))+ geom_line(colour="black")+ggtitle("Las Vegas Sands in wrost covid19 period")+scale_x_date(breaks = date_breaks("1 day"), labels=date_format("%b%d"))+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+zoom_wrost<-ggplot(zoom_filtered, aes(x=Date,y=Price))+ geom_line(colour="black")+ggtitle("Zoom in wrost covid19 period")+scale_x_date(breaks = date_breaks("1 day"), labels=date_format("%b%d"))+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+grid.arrange(AMC_wrost, Grubhub_wrost,LasVegas_wrost,zoom_wrost)
+```
+
+## Step4:Association rule
+### seperate stock price into three level
+```{r}
+AMC$Price.bracket<-discretize(AMC$Price, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+Grubhub$Price.bracket<-discretize(Grubhub$Price, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+LasVegas$Price.bracket<-discretize(LasVegas$Price, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+zoom$Price.bracket<-discretize(zoom$Price, method = "frequency",breaks = 3,labels = c("low","medium","high"))
+```
+
+### I use the same pattern in Part 1 Step 2 to separate the AMC's stock open price into three levels "low", "medium", "high". Indicate the daily situation of AMC's stock market more clearly. Then I apply the same method for Grubhub, Las Vegas Sand, and Zoom.
+
+### export the data and assembly all together
+```{r}
+rule_uscovidwithTime<-subset(uscovid, select = c("Date","dailyLevel.bracket","fatalityLevel.bracket", "positiveLevel.bracket","recoveryLevel.bracket")) 
+write.csv(rule_uscovidwithTime,"rule_uscovidwithTime.csv", row.names = FALSE)
+write.csv(AMC,"AMCedit.csv", row.names = FALSE)
+write.csv(Grubhub,"Grubhubedit.csv", row.names = FALSE)
+write.csv(LasVegas,"LasVegasedit.csv", row.names = FALSE)
+write.csv(zoom,"zoomedit.csv", row.names = FALSE)
+```
+### import the revised data
+```{r}
+rule_uscovidwithTimenew <- read.csv("~/Desktop/bigdata/Final/rule_uscovidwithTime copy.csv")
+Allfactordata<- na.omit(rule_uscovidwithTimenew)
+```
+### processing data
+```{r}
+Allfactordata$dailyLevel.bracket <- as.factor(Allfactordata$dailyLevel.bracket) 
+Allfactordata$fatalityLevel.bracket <- as.factor(Allfactordata$fatalityLevel.bracket) 
+Allfactordata$positiveLevel.bracket <- as.factor(Allfactordata$positiveLevel.bracket) 
+Allfactordata$recoveryLevel.bracket <- as.factor(Allfactordata$recoveryLevel.bracket) 
+Allfactordata$LasVegas.bracket <- as.factor(Allfactordata$LasVegas.bracket) 
+Allfactordata$Grubhub.bracket <- as.factor(Allfactordata$Grubhub.bracket) 
+Allfactordata$AMC.bracket <- as.factor(Allfactordata$AMC.bracket) 
+Allfactordata$Zoom.bracket <- as.factor(Allfactordata$Zoom.bracket) 
+```
+
+### Build Association rule
+```{r}
+all_rules<- apriori(Allfactordata, parameter = list(support = 0.01, confidence = 0.5))
+
+control_good <- apriori(data=Allfactordata, parameter=list (supp=0.01,conf = 0.8), appearance = list (lhs=c("dailyLevel.bracket=good","fatalityLevel.bracket=low","positiveLevel.bracket=low","recoveryLevel.bracket=high")))
+
+AMC_good <- apriori(data=Allfactordata, parameter=list (supp=0.01,conf = 0.8), appearance = list (rhs="AMC.bracket=high"))
+
+LasVegas_good <- apriori(data=Allfactordata, parameter=list (supp=0.01,conf = 0.8), appearance = list (rhs="LasVegas.bracket=high"))
+
+Grubhub_good <- apriori(data=Allfactordata, parameter=list (supp=0.01,conf = 0.8), appearance = list (rhs="Grubhub.bracket=high"))
+
+Zoom_good <- apriori(data=Allfactordata, parameter=list (supp=0.01,conf = 0.8), appearance = list (rhs="Zoom.bracket=high"))
+
+```
+### check the rules
+```{r}
+inspect(head(sort(control_good, by = "support"), 3))
+inspect(head(sort(AMC_good, by = "support"), 3))
+inspect(head(sort(LasVegas_good, by = "support"), 3))
+inspect(head(sort(Grubhub_good, by = "support"), 3))
+inspect(head(sort(Zoom_good, by = "support"), 3))
+```
+### From the above data, we can see that 1.The stock marketing of Zoom is positive relative to the  U.S covid-19 daily safety level(good).
+
+### 2.The stock marketing of AMC is positive relative to the U.S covid-19 daily safety level(good) and Las Vegas Sands Stock marketing(high).
+
+### 3.The stock marketing of  Las Vegas Sands is positive relative to the recovery rate level and fatality rate(low) of U.S covid-19. But negative relative to the covid-19 daily safety level(bad). 
+
+### 4.The stock marketing of Grubhub is positive relative to the positive rate level(low) and fatality rate level(low) of U.S covid-19. But negative relative to AMC's stock marketing(low).
+
+### 5.The stock marketing of Zoom is positive relative to the recovery rate level(high) and positive rate level(low) of U.S covid-19.
+
+# Conclusion
+
+## The impact of covid-19 on all four companies are massive. For companies like AMC and Las Vegas Sands. It is because they all depend on offline services, so their stock marketing will fluctuate with the U.S. covid-19 situation. If the government controls well in that period, their stock price will rise. For companies like Zoom and Grubhub, which focus on online services. They are more and more popular in the U.S during the epidemic. As a result, their stock price is increased a lot.
+
+## In addition, the stock marketing of the four companies will become better with the covid-19 in the United States. It shows that if the epidemic is well controlled, both offline services companies and online services companies in the United States will benefit
+
+

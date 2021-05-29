@@ -1,0 +1,106 @@
+---
+title: "Lab - Association Rules"
+author: "Qian Feng"
+date: "3/31/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Package
+```{r}
+library(arules)
+library(arulesViz)
+```
+
+## Data
+```{r}
+bankdata <- read.csv("~/Downloads/bankdata.csv")
+str(bankdata)
+```
+
+# Pre-processing
+### Remove ID
+remove id column
+```{r}
+bankdata <- subset(bankdata, select=-c(id))
+
+str(bankdata)
+```
+
+### Discretize income into a new factor
+discretize= sort into 3 class in a new column
+```{r}
+bankdata$income.bracket <- discretize(bankdata$income, method = "frequency", breaks = 3, labels = c("low", "medium", "high"))
+
+str(bankdata)
+```
+
+### Discretize age into a new factor
+```{r}
+bankdata$age.group <- discretize(bankdata$age, method = "frequency", breaks = 3, labels = c("young", "adult", "elder"))
+
+str(bankdata)
+```
+ 
+### Convert other columns to factors
+convert non-numeric column into numeric
+```{r}
+cols <- c("sex", "region", "married", "children", "car", "save_act", "current_act", "mortgage", "pep")
+
+bankdata[cols] <- lapply(bankdata[cols], factor)
+
+str(bankdata)
+```
+
+### Convert the bankdata to transactional data
+```{r}
+bankdata_tr <- as(bankdata[, sapply(bankdata, is.factor)], "transactions")
+
+str(bankdata_tr)
+```
+# Lab - My part
+
+## whether the customer buy a pep or not
+pre-defined RHS, which is pep = NO and pep = YES
+```{r}
+rules <- apriori(data = bankdata_tr, parameter = list(support = 0.05, confidence = 0.9),appearance = list(rhs=c('pep=YES','pep=NO') ))
+
+```
+
+
+```{r}
+#check whether the rules combine pep=NO and pep=YES at the same time.
+#inspect(rules)
+```
+
+## Check the top 5
+Pick two rules and try to explain the reasons.
+```{r}
+#inspect(head(sort(rules, by="confidence"), 5))
+inspect(head(sort(rules, by="lift"), 5))
+```
+From the top 5 sorts by lift, we can see that all 5's lift > 1, which means lhr and rhs are positively correlated.
+To be more specific, we can say that. If the customer has children, has a  current account, and income is high level, he/she will buy a pep. Maybe they think pep is an excellent financial product, and they also need to buy this to save their children's education.
+
+## Find new rules
+Add minlen = 5 into the parameter and generate new rules.
+```{r}
+rules_new <- apriori(data = bankdata_tr, parameter = list(support = 0.05, confidence = 0.9, minlen = 5),appearance = list(rhs=c('pep=YES','pep=NO') ) )
+inspect(head(sort(rules_new, by="confidence"), 5))
+```
+
+After setting the minimum number of items = 5, from the top 5 sorts by confidence we can see that.
+if the customer is married, has no child, and has a current account, he won't buy a PEP even his income is very high. It maybe the customer doesn’t need to buy financial products for future investment, and also he doesn't save money for children's education.
+
+## More limitations
+```{r}
+rules_more <- apriori(data = bankdata_tr, parameter = list(support = 0.1, confidence = 0.45, maxlen=13,minlen = 4),appearance = list(rhs=c('pep=YES','pep=NO') ) )
+inspect(head(sort(rules_more, by="support"), 5))
+```
+After setting the minimum number of items = 4,maximum number of item =13 ,from the top 5 sorts by support we can see that.
+if the customer is married, has an account(saving or current or both), he won't buy a PEP even he doesn't have a mortgage. It maybe the customer doesn’t need to buy a financial product to support his future life, and also he believes in saving money in the bank, rather than buying financial products. he may also think is a fraud after the financial crisis happened in 2008.
+
+

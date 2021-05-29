@@ -1,0 +1,102 @@
+---
+title: "Lab - KMeans"
+output: pdf_document
+author: Qian Feng 1925015
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Packages
+```{r}
+library(tidyverse)
+library(cluster)
+library(factoextra)
+library(dendextend)
+```
+
+### Data
+```{r}
+modify.covid.data <- read.csv("~/Downloads/modify-covid-data.csv", row.names=1)
+
+df <- modify.covid.data
+
+# Remove any missing values
+df <- na.omit(df)
+
+# Avoid the clustering algorithm depending on an arbitray variable unit
+ df <- scale(df)
+```
+
+### Question 1
+1.Determine the value of k using Elbow, Average silhouette, and Gap statistic methods.
+## Elbow
+```{r}
+set.seed(123)
+
+fviz_nbclust(df, kmeans, method = "wss")
+fviz_nbclust(df, kmeans, method = "wss", k.max = 20)
+```
+Base on the Elbow method, 
+
+In graph 1.1, the graph doest not change dramatically after point 4. So, the elbow point in this graph is 4, optimal value of k = 4
+
+In graph 1.2, the graph doest not change dramatically after point 10. So, the elbow point in this graph is 10, optimal value of k = 10
+
+## Average silhouette
+```{r}
+fviz_nbclust(df, kmeans, method = "silhouette")
+```
+Base on the Average Silhouette Method, the optimal value of k = 3
+## Gap statistic
+```{r}
+gap_stat <- clusGap(df, FUN=kmeans, nstart = 25, K.max = 10, B = 208)
+
+fviz_gap_stat(gap_stat)
+
+```
+Base on the Gap Statistic method, the optimal value of k = 1
+
+### Question 2
+2.Run kmeans() function with the values(s) of k calculated from step 1
+## kmeans
+```{r}
+k1 <- kmeans(df, centers = 1, nstart = 25)
+
+k3 <- kmeans(df, centers = 3, nstart = 25)
+
+k4 <- kmeans(df, centers = 4, nstart = 25)
+
+k10 <- kmeans(df, centers = 10, nstart = 25)
+
+str(k1)
+str(k3)
+str(k4)
+str(k10)
+
+fviz_cluster(k1, data = df, main='k=1')
+fviz_cluster(k3, data = df, main='k=3')
+fviz_cluster(k4, data = df, main='k=4')
+fviz_cluster(k10, data = df, main='k=10')
+
+```
+
+
+
+
+### Question 3
+3.Draw the result(s) into a figure.
+```{r}
+library(gridExtra)
+library(dbplyr)
+
+p1 <- fviz_cluster(k1, data = df, geom = "point") + ggtitle("k=1")
+p3 <- fviz_cluster(k3, data = df, geom = "point") + ggtitle("k=3")
+p4 <- fviz_cluster(k4, data = df, geom = "point") + ggtitle("k=4")
+p10 <- fviz_cluster(k10, data = df, geom = "point") + ggtitle("k=10")
+
+grid.arrange(p1,p3,p4,p10, nrow=2)
+```
+As we can see from result, when k=1,3,4,10 the Dim1 and Dim2 represent 37.4% and 23.6% respectively. These are acceptable results.

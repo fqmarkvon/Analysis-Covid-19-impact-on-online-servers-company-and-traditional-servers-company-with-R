@@ -1,0 +1,155 @@
+---
+title: Analyze the impact of covid-19 on offline Services Industry and Internet Services
+  Industry
+author: "Qian Feng"
+date: "4/17/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Aim
+The aim of this to........
+## Package
+```{r}
+library(ggplot2)
+library(dplyr)
+library(arules)
+library(arulesViz)
+library(e1071)
+library(gridExtra)
+library(lubridate)
+library(grid)
+```
+
+## Data
+```{r}
+original_uscovid <- read.csv("~/Desktop/daidai final/Qian Feng project/modify/modify_uscovid.csv")
+uscovid<- na.omit(original_uscovid)
+```
+
+# Pre-processing
+```{r}
+uscovid$fatalityRate<-(uscovid$death/uscovid$positive)*100
+uscovid$positiveRate<-(uscovid$positive/uscovid$totalTestResults)*100
+uscovid$recoveryRate<-(uscovid$recovered/uscovid$positive)*100
+uscovid$dailylevelnum<-(uscovid$positiveIncrease/uscovid$totalTestResultsIncrease)*100
+uscovid$dailylevel.bracket<-discretize(uscovid$dailylevelnum, method = "frequency",breaks = 3,labels = c("bad","fine","good"))
+```
+
+## graph
+```{r}
+fatalityRate_graph<-ggplot(uscovid, aes(x=date,y=fatalityRate),color="red")+ geom_line()
+positiveRate_graph<-ggplot(uscovid, aes(x=date,y=positiveRate),color="blue")+ geom_line()
+recoveryRate_graph<-ggplot(uscovid, aes(x=date,y=recoveryRate),color="green")+ geom_line()
+
+grid.arrange(fatalityRate_graph, positiveRate_graph,recoveryRate_graph)
+ggplot(uscovid, aes(x=date, y=dailylevelnum, color=dailylevel.bracket)) + geom_line()
+
+
+covid_graph<-ggplot(data=uscovid)+geom_line(aes(x=date,y=fatalityRate),color="red")+geom_line(aes(x=date,y=positiveRate),color="blue")+geom_line(aes(x=date,y=recoveryRate),color="green")
+
+covid_graph
+
+```
+## subset
+```{r}
+#rule_uscovid<-subset(uscovid, select = c("date","fatalityRate", "positiveRate","recoveryRate","dailylevel.bracket")) 
+rule_uscovid<-subset(uscovid, select = c("date","fatalityRate", "positiveRate","recoveryRate","dailylevelnum")) 
+
+```
+## rules
+```{r}
+#level_rules <- apriori(data = rule_uscovid, parameter = list (supp=0.001,conf = 0.08),list(rhs="dailylevelnum"))
+level_rules <- apriori(data = rule_uscovid, parameter = list (supp=0.001,conf = 0.08))
+
+
+```
+
+
+## check
+```{r}
+#uscovid
+#rule_uscovid
+inspect(head(sort(level_rules, by = "lift"), 3))
+```
+## companydata
+```{r}
+zoom <- read.csv("~/Desktop/daidai final/Qian Feng project/modify/modify_zoom2.csv")
+LasVegas <- read.csv("~/Desktop/daidai final/Qian Feng project/modify/modify_LasVegas2.csv")
+Grubhub <- read.csv("~/Desktop/daidai final/Qian Feng project/modify/modify_Grubhub2.csv")
+AMC <- read.csv("~/Desktop/daidai final/Qian Feng project/modify/modify_AMC2.csv")
+```
+## pre-possesing
+```{r}
+zoom_graph<-ggplot(zoom, aes(x=Date,y=Open))+ geom_line()
+LasVegas_graph<-ggplot(LasVegas, aes(x=Date,y=Open))+ geom_line()
+Grubhub_graph<-ggplot(Grubhub, aes(x=Date,y=Open))+ geom_line()
+AMC_graph<-ggplot(AMC, aes(x=Date,y=Open))+ geom_line()
+
+Allcompany_graph<-ggplot(NULL, aes(Date, Open)) + 
+  geom_line(data = zoom, col = "red") +
+  geom_line(data = LasVegas, col = "blue")+
+  geom_line(data = Grubhub, col = "green")+
+  geom_line(data = AMC, col = "black")
+
+Allcompany_graph
+```
+## combine company with covid-19
+fatalityRate_graph<-ggplot(uscovid, aes(x=date,y=fatalityRate),color="red")+ geom_line()
+positiveRate_graph<-ggplot(uscovid, aes(x=date,y=positiveRate),color="blue")+ geom_line()
+recoveryRate_graph<-ggplot(uscovid, aes(x=date,y=recoveryRate),color="green")+ geom_line()
+
+zoom_graph<-ggplot(zoom, aes(x=Date,y=Open))+ geom_line()
+LasVegas_graph<-ggplot(LasVegas, aes(x=Date,y=Open))+ geom_line()
+Grubhub_graph<-ggplot(Grubhub, aes(x=Date,y=Open))+ geom_line()
+AMC_graph<-ggplot(AMC, aes(x=Date,y=Open))+ geom_line()
+```{r}
+ggplot() +
+      geom_line(data=uscovid, aes(x=date, y=fatalityRate), fill="red",
+        colour="red", size=1 +
+      geom_line(data=uscovid, aes(x=date, y=positiveRate), fill="blue",
+        colour="blue", size=1) +
+      geom_line(data=uscovid, aes(x=date, y=recoveryRate), fill="green",
+        colour="green", size=1) +
+      geom_line(data=zoom, aes(x=Date, y=Open), fill="black",
+        colour="black", size=1),
+
+  
+```
+## try
+```{r}
+zoom_try <- read.csv("~/Desktop/daidai final/Qian Feng project/zoom.csv")
+
+```
+
+```{r}
+zoom_try$Date<- as.Date(zoom_try$Date,"%m/%d")
+```
+
+## output
+```{r}
+zoomtry_graph<-ggplot(zoom_try, aes(x=Date,y=Open))+ geom_line()
+zoomtry_graph
+zoomtry_graph2<-zoomtry_graph+ scale_x_date(date_breaks = "1 day"))
+zoomtry_graph2
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(zoomtry_graph), ggplotGrob(zoomtry_graph2), size="last"))
+```
+## try2
+```{r}
+#ggplot(data=zoom_try[which(zoom_try$Date>"2020-9-30"),],
+#       aes(x=Date, y=Open))+ geom_line()
+
+start.date = as.Date("2020-09-30")
+end.date   = as.Date("2020-12-04")
+
+filtered = data=zoom_try %>% 
+  filter(Date >= start.date & 
+         Date <= end.date)
+
+ggplot(filtered, aes(x=Date, y=Open)) + geom_line()
+```
+

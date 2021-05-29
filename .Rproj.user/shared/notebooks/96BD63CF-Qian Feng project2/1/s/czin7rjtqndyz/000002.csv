@@ -1,0 +1,4 @@
+"0","AMC$Price.bracket<-discretize(AMC$Price, method = ""frequency"",breaks = 3,labels = c(""low"",""medium"",""high""))"
+"0","Grubhub$Price.bracket<-discretize(Grubhub$Price, method = ""frequency"",breaks = 3,labels = c(""low"",""medium"",""high""))"
+"0","LasVegas$Price.bracket<-discretize(LasVegas$Price, method = ""frequency"",breaks = 3,labels = c(""low"",""medium"",""high""))"
+"0","zoom$Price.bracket<-discretize(zoom$Price, method = ""frequency"",breaks = 3,labels = c(""low"",""medium"",""high""))"

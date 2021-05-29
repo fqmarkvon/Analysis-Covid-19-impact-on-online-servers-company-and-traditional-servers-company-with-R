@@ -1,0 +1,6 @@
+"0","rule_uscovidwithTime<-subset(uscovid, select = c(""Date"",""dailyLevel.bracket"",""fatalityLevel.bracket"", ""positiveLevel.bracket"",""recoveryLevel.bracket"")) "
+"0","write.csv(rule_uscovidwithTime,""rule_uscovidwithTime.csv"", row.names = FALSE)"
+"0","write.csv(AMC,""AMCedit.csv"", row.names = FALSE)"
+"0","write.csv(Grubhub,""Grubhubedit.csv"", row.names = FALSE)"
+"0","write.csv(LasVegas,""LasVegasedit.csv"", row.names = FALSE)"
+"0","write.csv(zoom,""zoomedit.csv"", row.names = FALSE)"

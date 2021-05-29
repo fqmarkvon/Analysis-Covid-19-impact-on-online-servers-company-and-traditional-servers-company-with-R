@@ -1,0 +1,8 @@
+"0","rule_uscovid<-subset(uscovid, select = c(""dailyLevel.bracket"",""fatalityLevel.bracket"", ""positiveLevel.bracket"",""recoveryLevel.bracket"")) "
+"0",""
+"0","rule_uscovid_rules<- apriori(rule_uscovid, parameter = list(support = 0.01, confidence = 0.5))"
+"1","Apriori
+"
+"1","
+Parameter specification:
+"

@@ -1,0 +1,5 @@
+"0","uscovid$fatalityRate<-(uscovid$death/uscovid$positive)*100"
+"0","uscovid$positiveRate<-(uscovid$positive/uscovid$totalTestResults)*100"
+"0","uscovid$recoveryRate<-(uscovid$recovered/uscovid$positive)*100"
+"0","uscovid$dailylevelnum<-(uscovid$positiveIncrease/uscovid$totalTestResultsIncrease)*100"
+"0",""
